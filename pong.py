@@ -1,36 +1,71 @@
 import pygame
+import random
 
 pygame.init()
+clock = pygame.time.Clock()
+playerAScore = 0
+playerBScore = 0
 
-pygame.display.set_caption('Pong')
+def ballMovement():
+    global ballSpeedX, ballSpeedY, playerAScore, playerBScore
+#--------------------------------Moving the ball---------------------------------------    
+    ball.x += ballSpeedX
+    ball.y += ballSpeedY
+#-------------------------------Ball collisions---------------------------------------
+    if ball.top <= 0 or ball.bottom >= screenHeight:
+        ballSpeedY *= -1
+    if ball.left <= 0: 
+        ballReset()
+        playerBScore += 1
+    if ball.right >= screenWidth:
+        ballReset()
+        playerAScore += 1
+    if ball.colliderect(playerA) or ball.colliderect(playerB):
+        ballSpeedX *= -1
 
+#---------------------------Defining player rectangle restrictions----------------- 
+def playerMovement():
+    if playerA.top <= 0:
+        playerA.top = 0
+    if playerA.bottom >= screenHeight:
+        playerA.bottom = screenHeight
+    if playerB.top <= 0:
+        playerB.top = 0
+    if playerB.bottom >= screenHeight:
+        playerB.bottom = screenHeight
+
+#----------------------Resetting the ball after a point is scored---------------------        
+def ballReset():
+    global ballSpeedX, ballSpeedY
+    ball.center = (screenWidth/2, screenHeight/2)
+    ballSpeedY *= random.choice((1,-1))
+    ballSpeedX *= random.choice((1,-1))
+    
+
+#----------------------------------Colours-------------------------------------------
 green = (0, 255, 0)
 blue = (0, 0, 128)
 red = (255, 0, 0)
 black = (0, 0, 0)
-clock = pygame.time.Clock()
+grey = (200,200,200)
 
+#-----------------------------------Setting the screen---------------------------------------
 screenHeight = 600
 screenWidth = 800
 screen = pygame.display.set_mode((screenWidth ,screenHeight))
+pygame.display.set_caption('Pong')
 
-running = True
-
+#---------------------------------------Scoreboard--------------------------------------------
 font = pygame.font.SysFont("Cascadia Mono", 100)
 
-textA = font.render('1', True, green)
-textRectangleA = textA.get_rect()
-textRectangleA.center = (screenWidth/3, 45)
+#--------------------------------------Game rectangles------------------------------------------
+playerA = pygame.Rect((screenWidth-20,screenHeight/2-70,10,140))
+playerB = pygame.Rect((10,screenHeight/2-70,10,140))
+ball = pygame.Rect(screenWidth/2-15, screenHeight/2-15,30,30)
 
-textB = font.render('1', True, green)
-textRectangleB = textB.get_rect()
-textRectangleB.center = (533, 45)
-
-playerA = pygame.Rect((10,screenHeight/2-125,15,170))
-playerB = pygame.Rect((screenWidth-30,screenHeight/2-125,15,170))
-
-ball = pygame.draw.circle(screen, green, [300,400], 30)
-ballSpeed = [1,1]
+running = True
+ballSpeedX = 5
+ballSpeedY = 5
 
 while running:
     
@@ -40,29 +75,30 @@ while running:
     
     keys = pygame.key.get_pressed()
     if keys[pygame.K_w]:
-        playerA.move_ip(0,-3)
+        playerA.move_ip(0,-5)
     if keys[pygame.K_s]:
-        playerA.move_ip(0,3)
+        playerA.move_ip(0,5)
     if keys[pygame.K_UP]:
-        playerB.move_ip(0,-3)
+        playerB.move_ip(0,-5)
     if keys[pygame.K_DOWN]:
-        playerB.move_ip(0,3)
+        playerB.move_ip(0,5)
     
+    ballMovement()
+    playerMovement()
+    
+#-----------------------------------Visuals-------------------------------------------
     screen.fill(black)
+    textA = font.render(str(playerAScore), True, red)
+    screen.blit(textA, (300,270))
+    textB = font.render(str(playerBScore), True, red)
+    screen.blit(textB, (460,270))
+    pygame.draw.rect(screen,red,playerA)
+    pygame.draw.rect(screen,red,playerB)
+    pygame.draw.aaline(screen, grey, (screenWidth/2,0), (screenWidth/2,screenHeight))
+    pygame.draw.ellipse(screen, green, ball)
     
-    screen.blit(textA, textRectangleA)
-    screen.blit(textB, textRectangleB)
-    pygame.draw.rect(screen,(255,0,0),playerA)
-    pygame.draw.rect(screen,(255,0,0),playerB)
-    ball = ball.move(ballSpeed)
-    
-    ballSpeed[1] = -ballSpeed[1]
-    
-    pygame.draw.circle(screen, green, ball.center, 15)
-    
-    
+#------------------------------------Updating the window-----------------------------
     pygame.display.flip()
-    
     clock.tick(60)
     
 pygame.quit()
